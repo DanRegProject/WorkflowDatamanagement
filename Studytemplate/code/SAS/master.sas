@@ -13,7 +13,7 @@
 %let globalprojectpath = F:\Projekter\&GlobalProject;
 
 /* project specific names and paths */
-%let ProjectName          = t&Projectnumber._&Studynumber._&ProjectOwnerInitials._&Shorttitle; /* set to <project folder name> */
+%let ProjectName          = &Projectnumber._&Studynumber._&ProjectOwnerInitials._&Shorttitle; /* set to <project folder name> */
 
 %let ProjectPath          = &globalprojectpath/&ProjectName;
 
