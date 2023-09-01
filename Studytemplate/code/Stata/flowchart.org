@@ -1,0 +1,34 @@
+#+BEGIN_COMMENT
+/*
+*/
+#+END_COMMENT
+
+* Flowchart
+
+Excluded patients. The following table summarises the number of patients being excluded.
+
+#+BEGIN_SRC stata :exports none
+*genFlowline flow, text(Outside riskset due to emigration) crit(censurdate<=$index) new
+genFlowline flow, text(Index date outside $inclstart to $inclend) crit(($index < $inclstart | $index > $inclend)) new
+
+genFlowline flow, text(Invalid CPR) crit(missing(birthdate))
+genFlowline flow, text(Immigrated within 1 yr before index) crit(pop_in != . & $index-pop_in < 365 & pop_in <$index) same
+genFlowline flow, text(Inconsistent death info (before index)) crit(deathdate < $index & deathdate != .)
+genFlowline flow, text(Death on index date) crit(deathdate == $index)
+genFlowline flow, text(Emigrated and not back before index) crit(pop_out != . & (pop_in == . | $index <= pop_in))
+#+END_SRC
+
+#+BEGIN_SRC stata
+beginhide
+table1 flow 1, by($BGRP) fewdata(0)
+endhide
+table1 flow 1, by($BGRP)
+#+END_SRC
+
+Study population before standard exclusion: =[count]= patients.
+Study population after standard exclution: =[count if flow=="OK"]=.
+
+#+BEGIN_SRC stata :exports none
+keep if flow=="OK"
+#+END_SRC
+

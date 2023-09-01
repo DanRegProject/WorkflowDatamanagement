@@ -1,0 +1,32 @@
+#+BEGIN_COMMENT
+/* 
+
+*/
+#+END_COMMENT
+#+BEGIN_COMMENT
+ Essentially this file need only to be edited if some additional
+explanatory txt is needed or change in section heading.
+The content of table1 is specified by global variables $BVAR, $BGRP
+and $BTEST
+#+END_COMMENT
+
+* Table 1
+Categorical data presented as "% (count)", data considered continous
+are presented as "mean (sd)" or by quartiles. Group differences optionally may be
+presented by significane test, Fisher's exact test, Student's T or
+Kruskal Wallis as appropriate. Characteristics with low numbers (<=4) are masked with "-".
+
+Baseline diagnose characteristics
+
+#+BEGIN_SRC stata :exports results
+if "$weight" != "" loc wtxt W
+table1 $BVARd $weight , by($BGRP) test($BTEST) balance($BBALANCE)  fewdata($fewdata) all
+#+END_SRC
+
+Medication baseline information, '365to0' use previous 365 days prescription information.
+#+BEGIN_SRC stata :exports results
+if "$weight" != "" loc wtxt W
+table1 $BVARm $weight, by($BGRP) test($BTEST) balance($BBALANCE) fewdata($fewdata) all
+#+END_SRC
+
+

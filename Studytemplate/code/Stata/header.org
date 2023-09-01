@@ -1,0 +1,13 @@
+#+BEGIN_SRC Stata
+dis "#+TITLE: $ProjectName; $ProjectDescription"
+dis "#+AUTHOR: $ProjectOwnerInitials"
+#+END_SRC Stata
+#+DESCRIPTION: 1.0
+#+STYLE: <link rel="stylesheet" type="text/css" media="screen" href="_lib/screen.css"/> <link rel="stylesheet" type="text/css" media="screen" href="_lib/print.css"/>
+#+OPTIONS: author:t email:nil creator:nil timestamp:t ^:nil
+#+LATEX_HEADER: \usepackage{fullpage}
+#+LATEX_HEADER: \usepackage{lscape}
+#+LATEX_HEADER: \usepackage{epstopdf}
+#+LATEX_HEADER: \usepackage{draftwatermark}
+#+LATEX_HEADER: \SetWatermarkText{Confidential}
+#+LATEX_HEADER: \SetWatermarkScale{5}

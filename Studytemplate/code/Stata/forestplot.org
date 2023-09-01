@@ -1,0 +1,75 @@
+#+BEGIN_COMMENT
+/* 
+*/
+#+END_COMMENT
+
+* Forest plot
+
+#+BEGIN_SRC Stata
+preserve
+qui{
+*	Step 1 Open the dataset and explore in browse
+  use $LocalFinalData/cox.dta, replace
+  browse
+  /* example of forest plot with Endpoints as columns, analysis as rows and FUP as groups */
+  
+  * Step 2 Change all entries in rows, groups and columns to be suitable for the plot, check the browse window while getting it to work
+  
+  * replace level="No" if level=="0"
+/* Trick to ensure capital first letter */
+ * replace analysis=proper(analysis)
+ 
+ * Step 3 The order of groups and rows is essential to get the right display. 
+ * The following is a suggestion to how this may be done.
+ * Each call of levels of will procude output in the log, check to see 
+ *    1 that the texts are as expected
+ *    2 that the order is as wanted in the plot, if the order should be different, then the easy thing is to copy the text from the log and define the local variable again with the correct order. Use copy/pase to avoid transcript errors.
+ * IMPORTANT remore all primes (` ') before and after "xxx" AND embed the entire string within double quotes: `""Level 1" "Level 2""'
+ * read this once again as it is important to get things working!
+ levelsof analysis, local(sortlist1)
+ loc sortlist1 `""Crude" "Adjusted""' 
+ levelsof Endpoint, local(sortlist2)
+ levelsof level, local(sortlist3)
+ 
+
+  /* remember to match the right sortlist to (column/row/group) */
+  gen sort1 = 0
+  loc count = 1
+  foreach i of local sortlist1{
+    replace sort1 = `count' if analysis=="`i'"
+    loc count = `count' + 1
+  }
+  gen sort2 = 0
+  loc count = 1
+  foreach i of local sortlist2{
+    replace sort2 = `count' if Endpoint=="`i'"
+    loc count = `count' + 1
+  }
+  gen sort3 = 0
+  loc count = 1
+  foreach i of local sortlist3{
+    replace sort3 = `count' if level =="`i'"
+    loc count = `count' + 1
+  }
+  egen rowmin = rowmin(sort1 sort2 sort3)
+  drop if rowmin == 0
+
+* end Step 3
+
+* Step 4, visit the browse window to ensure that the variables for Columns, Groups, and rows are correct
+
+* example with two columns
+forestplot HR HRl HRu if level=="NOAC" & FUP==5, rowvar(Endpoint) columnvar(analysis) ///
+       plab(Favours Treatment Favours Placebo) ppos(0.5 2.0 0.5 2.0) xlim(0.4 20 0.4 15) /// 
+       hadj(0 0) columnlabel(Column) columnsublabel(HR (95%CI)) rowlabel(Risk factor) /// 
+       wpan(8,10,30,10) plotname($LocalOutDir/Forestplot) width(16.7) height(6.5) valtab(TRUE) /// 
+       log(TRUE) hlines(FALSE)
+
+  }
+  display "#+CAPTION: ForestPlot." _n(2)
+  display "[[./Forestplot.pdf]]" _n(2)
+  display _newline "(./Forestplot.pdf)"
+
+  restore
+
+#+END_SRC

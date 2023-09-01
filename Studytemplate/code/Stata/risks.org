@@ -1,0 +1,73 @@
+* Cumulative Incidence Functions
+
+#+BEGIN_SRC Stata
+{
+/* Calculate cumulative incidence / risk */
+  if "$weight" != "" loc wtxt W
+  genCuminc CIm`wtxt' $weight, endpoint($ENDPd) origin($index) ///
+    enter($index) scale(365.25) type(KM)
+  genCuminc CIkm`wtxt' $weight, endpoint($ENDPd) origin($index) ///
+    enter($index) scale(365.25) by($BGRP) type(KM)
+  genCuminc CIcuminc`wtxt' $weight, endpoint($ENDP) origin($index) ///
+    enter($index) scale(365.25) by($BGRP) type(stcuminc) compete($ENDPd)
+  genCuminc CIcompet`wtxt' $weight, endpoint($ENDP) origin($index) ///
+    enter($index) scale(365.25) by($BGRP) type(stcompet) compete($ENDPd)
+
+  reportCuminc CIm, endpoint($ENDPd) time($FUP)
+  reportCuminc CIkm, endpoint($ENDPd) time($FUP) by($BGRP)
+  reportCuminc CIcuminc, endpoint($ENDP) time($FUP) by($BGRP)
+  reportCuminc CIcompet, endpoint($ENDP) time($FUP) by($BGRP)
+
+/* Plot cumulative incidence/failure curves up to 2.5 year of follow up */
+/* Note the multiple quotes in the legend! */
+  loc plotopt  ///
+    scheme(s1mono) ytitle(`"Cumulative incidence"') xtitle(`"Time since $index (years)"')
+/* lineoptions for each level of by(), to be seperated by a , */
+  loc lineopt lpattern(solid), lpattern(dash)
+/* if the endpoint list involves more than one endpoint then the quoted titles must be seperated by a , */
+  plotCuminc CIm`wtxt', endpoints($ENDPd)  maxt($maxFUP)  ///
+    lineopt(`lineopt') plotopt(`plotopt') savingpath($LocalOutDir) title("Death") /*scale(365.25) */ ///
+    orglegend(Kaplan-Meier survival/failure curve for event `e' up to $maxFUP years of followup.) ///
+    atrisk atrisktimes($FUP) atriskposy(0.25) ci
+  plotCuminc CIm`wtxt', endpoints($ENDP)  maxt($maxFUP)  ///
+    lineopt(`lineopt') plotopt(`plotopt') savingpath($LocalOutDir) title("Death") /*scale(365.25) */ ///
+    orglegend(Cumulative incidence survival/failure curve for event `e' up to $maxFUP years of followup.) ///
+    atrisk atrisktimes($FUP) atriskposy(0.25) ci
+  loc plotopt legend(order($rateLegend) ring(0) pos(ul)) ///
+    scheme(s1mono) ytitle(`"Cumulative incidence"') xtitle(`"Time since $index (years)"')
+  plotCuminc CIkm`wtxt', endpoints($ENDPd) by($BGRP) maxt($maxFUP)  ///
+    lineopt(`lineopt') plotopt(`plotopt') savingpath($LocalOutDir) title("Death") /*scale(365.25) */ ///
+    orglegend(Kaplan-Meier survival/failure curve for event `e' up to $maxFUP years of followup.) ///
+    atrisk atrisktimes($FUP) atriskposy(0.25)
+  plotCuminc CIcuminc`wtxt', endpoints($ENDP) by($BGRP) maxt($maxFUP)   atrisk atrisktimes($FUP) ///
+    lineopt(`lineopt') plotopt(`plotopt') savingpath($LocalOutDir) title($rateTitle) /*scale(365.25)*/ ///
+    orglegend(stcuminc Cumulative incidence curves for event `e' up to $maxFUP years of followup.) 
+  plotCuminc CIcompet`wtxt', endpoints($ENDP) by($BGRP) maxt($maxFUP)   atrisk atrisktimes($FUP) ///
+    lineopt(`lineopt') plotopt(`plotopt') savingpath($LocalOutDir) title($rateTitle) /*scale(365.25)*/ ///
+    orglegend(STcompet Cumulative incidence curves for event `e' up to $maxFUP years of followup.) 
+    
+}
+#+END_SRC
+
+
+* Absolute risks
+
+#+BEGIN_SRC Stata
+
+/*Absolute risk calculations*/
+$beginhide
+genPV risk`wtxt' $weight, compete($ENDPd) endpoints($ENDP $ENDPd) at(1 2.5) origin($index) enter($index) scale(365.25)
+$endhide
+tempfile tmprisk
+
+genGLM $ENDP $ENDPd, outcomestub(risk`wtxt') exposure($BGRP) at(1 2.5) label("Crude") ///
+      saving(`tmprisk') glmopt(link(log) vce(robust)) show estore elabel(est)
+
+genGLM $ENDP $ENDPd, outcomestub(risk`wtxt') exposure($BGRP) at(1 2.5) label("Adjusted") ///
+      adjust($ADJ) saving(`tmprisk') glmopt(link(log) vce(robust) eform) show append postest(margins $BGRP | predict pred{e})
+
+reportGLM , using(`tmprisk') by(FUP)
+
+storeGLM, using(`tmprisk') id($repname) saving($LocalFinalData/PV.dta)
+
+#+End_SRC

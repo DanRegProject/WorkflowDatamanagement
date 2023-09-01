@@ -1,0 +1,49 @@
+#+BEGIN_COMMENT
+/* 
+
+*/
+#+END_COMMENT
+
+#+BEGIN_SRC Stata
+  dis "Check IPT weight summaries "
+  dis _n
+  reportSummarize, varlist(ipw)
+  reportSummarize, varlist(ipw) by ($BGRP) percentile
+  qui{
+      count if $BGRP==1
+      loc none = r(N)
+      count
+      loc ntot = r(N)
+      gen ipwstab =  ($BGRP==1)*(`none'/`ntot')*ipw + ($BGRP==0)*(1-(`none'/`ntot'))*ipw
+  }
+  dis "Check stabilised IPT weight mean of estimation cohort, should be close to 1" _n
+  reportSummarize, varlist(ipwstab)
+  reportSummarize, varlist(ipwstab) by ($BGRP) percentile
+  gl weight [iweight=ipwstab]
+  
+  #+END_SRC
+
+Check the weight distribution of the un- and stabilised weights.
+#+BEGIN_SRC Stata
+qui{
+  twoway (kdensity ipw if $BGRP==0)(kdensity ipw if $BGRP==1), ///
+    legend(order(1 "Control" 2 "Treatment")) xtitle("IPW") ytitle("kdensity")
+  graph export "$LocalOutDir/Propenipw.png"  , replace
+}
+dis "Propensity weight densities." _n
+dis "[[$LocalOutDir/Propenipw.png]]"
+dis _n "file: (Propenipw.png)" _n
+#+END_SRC
+
+#+BEGIN_SRC Stata
+qui{
+  twoway (kdensity ipwstab if $BGRP==0)(kdensity ipwstab if $BGRP==1), ///
+    legend(order(1 "Control" 2 "Treatment")) xtitle("IPWstab") ytitle("kdensity")
+  graph export "$LocalOutDir/Propenipwstab.png"  , replace
+}
+
+dis "Propensity stabilised weight densities." _n
+dis "[[$LocalOutDir/Propenipwstab.png]]"
+dis _n "file: (Propenipwstab.png)" _n
+#+END_SRC
+

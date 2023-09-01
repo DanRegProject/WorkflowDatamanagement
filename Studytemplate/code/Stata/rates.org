@@ -1,0 +1,42 @@
+#+BEGIN_COMMENT
+/* 
+
+*/
+#+END_COMMENT
+
+#+BEGIN_COMMENT
+This is a setup to report event rates, present KM-survival/failure
+curves, and cumulative incidence curves.
+It is only a template so modify as necessary.
+Eventually all rates are presented in a table. All rates are kept in
+a dataset rates.dta
+#+END_COMMENT
+
+* Incidence rates
+
+#+BEGIN_SRC Stata
+{
+  tempfile tmprate
+
+/* Calculate event rates */
+  genRates $weight, endpoints($ENDP $ENDPd) at($FUP) origin($index) ///
+    enter($index) scale(365.25) per(100)  saving(`tmprate') label("All")
+  genRates $weight, endpoints($ENDP $ENDPd) at($FUP) origin($index) ///
+    enter($index) scale(365.25) per(100) by($BGRP) saving(`tmprate') append
+  genRates $weight, endpoints($ENDP $ENDPd) at($FUP) origin($index) ///
+    enter($index) scale(365.25) per(100) by(sex $BGRP) saving(`tmprate') append  label("Within sex")
+
+/* do a nice table of event rates to the report */
+    if $num == 1{
+		reportRates , using(`tmprate') by(FUP) sorting(FUP Endpoint analysis)
+	}
+	if $num == 2{
+		reportRates , using(`tmprate')  by(FUP)
+	}
+
+/* put the rates in the database for possible later use across analyses */
+  storeRates , using(`tmprate') id($repname) saving($LocalFinalData/rates.dta)
+}
+#+END_SRC
+
+

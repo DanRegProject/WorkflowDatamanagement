@@ -1,0 +1,33 @@
+#+BEGIN_COMMENT
+/* 
+
+*/
+#+END_COMMENT
+* Propensity model
+
+A model for the propensity of treatment is estimated using a logistic
+regression on the following covariates macro list PVAR.
+
+#+BEGIN_SRC Stata :wrap example
+qui{
+  tempvar pred pw
+  glm $BGRP $PVAR , family(binomial) link(logit) iterate(15)
+  predict `pw', xb
+  predict `pred'
+  generate ipw = ($BGRP==1)/`pred' + ($BGRP==0)/(1-`pred')
+}
+#+END_SRC
+
+Check the common support of the distributions of the propensity scores
+in the estimation and match cohorts.
+#+BEGIN_SRC Stata
+qui{
+  twoway (kdensity `pw' if $BGRP==0)(kdensity `pw' if $BGRP==1), ///
+  legend(order(1 "Control" 2 "Treatment")) xtitle("Predictor") ytitle("kdensity")
+  graph export "$LocalOutDir/PropenDist.png"  , replace
+}
+dis "Propensity score kernel densities." _n
+dis "[[$LocalOutDir/PropenDist.png]]"
+dis _n "file: (PropenDist.png)" _n
+
+#+END_SRC

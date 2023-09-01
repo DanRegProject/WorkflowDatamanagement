@@ -1,0 +1,45 @@
+#+BEGIN_COMMENT
+/* 
+
+*/
+#+END_COMMENT
+
+* Cox regression
+#+BEGIN_SRC stata
+  {
+    tempfile tmpcox
+loc FUP 1.5
+    /* Crude analysis */
+    genHR $weight, endpoints($ENDP $ENDPd) at(`FUP') origin($index) enter($index) scale(365.25) ///
+      exposure($BGRP) label("Crude") coxopt(`coxopt') saving(`tmpcox') show ref($Ref) estore elabel(estC) assumption
+
+
+    /* Adjusted analysis */
+    genHR $weight, endpoints($ENDP $ENDPd) at(`FUP') origin($index) enter($index) scale(365.25) ///
+      exposure($BGRP) label("Adjusted") saving(`tmpcox') adjust($ADJ) show append ref($Ref) estore elabel(estA) postest(lincom 0.$BGRP-1.$BGRP)
+
+      foreach e in $ENDP $ENDPd{
+      foreach t in `FUP'{
+      loc ttxt = subinstr("`t'",".","_",.)
+
+      lrtest estA`e'`ttxt' estC`e'`ttxt'
+      }
+      }
+}
+#+END_SRC
+
+** Summary
+
+#+BEGIN_SRC stata
+{
+  /* Do a nice table of hazard rates ratios to the report */
+  reportHR, using(`tmpcox') by(FUP)
+
+dis "With added e-values"
+  reportHR, using(`tmpcox') by(FUP) evalue
+
+  /* Put the rates in the database for possible later use across analyses */
+  storeHR, using(`tmpcox') id($repname) saving($LocalFinalData/cox.dta)
+}
+#+END_SRC
+

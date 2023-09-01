@@ -1,0 +1,48 @@
+* Propensity model
+
+In the case of more than two treatment alternatives, we use the Stata
+interface to the R-package TWANG
+develloped by Ridgeway, McCaffrey, Griffin and Burgette (2014), see
+correct reference on www.rand.org/statistics/twang. The method is based on regression trees to weight the
+observations to obtain comparable populations. The procedure enable
+estimation of treatment effects in terms om /ATE/ - average treatment
+effect on the population (on average treatment effect if all were
+given the two treatment alternatives) and /ATT/ - average treatment
+effect on the treated (the average change in effect if those treated
+were given the alternative treatment instead).
+
+The propensity model use the following covariates for
+treatment prediction:
+#+BEGIN_QUOTE
+ =[dis "$PVAR1"]=
+ =[dis "$PVAR2"]=.
+#+END_QUOTE
+
+#+BEGIN_SRC Stata
+  /* This code is good for two treatment alternatives */
+
+ps $BGRP $PVAR, rcmd("$Rcmd") stopmethod(es.mean) estimand(ATT) objpath($localoutdir)
+
+psplot, plotname($localoutdir/pstraceplot.png) plotformat(png) plots(optimize)
+psplot, plotname($localoutdir/psbalanceplot.png) plotformat(png) plots(es)
+
+rename esmeanatt IPTW
+summarize IPTW  if est
+
+gl weight [pweight=IPTW]
+
+#+END_SRC
+
+
+#+CAPTION: Balance plot
+[[./psbalanceplot.png]]
+
+(file: psbalanceplot.png)
+
+#+CAPTION: Propensity trace plot
+[[./pstraceplot.png]]
+
+(file: pstraceplot.png)
+
+
+

@@ -1,0 +1,169 @@
+#+BEGIN_COMMENT
+/* 
+
+*/
+#+END_COMMENT
+
+
+
+* Background
+This file is: =[dis "$repname"]=.
+
+Analysis report for the xxxxxx Study.
+
+Further details to be filled in.
+
+This is an analysis report in process, and is to be considered as
+confidential and not for publication and distribution.
+
+#+BEGIN_SRC Stata
+orginclude "../StudyBackground.txt", dir($LocalOutDir)
+#+END_SRC Stata
+
+* Basic data preparation
+#+BEGIN_SRC Stata
+orginclude "SAScomments.txt", dir($LocalOutDir)
+orginclude "MakedataComments.txt", dir($LocalOutDir)
+#+END_SRC Stata
+
+
+* Study description
+** Population and inclusion criteria
+Inclusion start at =[dis %d $inclstart]= and end at =[dis %d $inclend]=.
+End of follow-up: =[dis %d $studyend]=.
+
+Patients are included in the study by the first occuring
+prescription of bla bla bla
+
+#+BEGIN_COMMENT
+** Outcome variables
+Endpoints are derived from hospital discharge information using
+primary (A) and secondary (B) codes. Emergency room codes ar not
+included, but ambulatory and hospital codes are.
+
+We consider the following *endpoints*: =[dis "$ENDP $ENDPd"]=, the combined
+endpoints are
+- A :: =[dis "$A"]=
+- B :: =[dis "$B"]=.
+
+Observe that relative paths are according to the position of the
+generated report. Here it is assumed to be in out.
+
+All text here is only for template and inspiration.
+#+END_COMMENT
+
+
+The following codes are used for indentification of endpoints:
+#+ATTR_LaTeX: :align |l|p{7cm}|p{7cm}|
+| Outcome | Diagnosis | ICD-10 |
+|---------+------+-----|
+#+BEGIN_SRC Stata
+orginclude "endplist.txt", dir($LocalOutDir)
+#+END_SRC Stata
+
+** Baseline covariates
+
+
+#+ATTR_LATeX: :align |l|p{5cm}|p{7cm}|
+| Covariate | Diagnose   | ICD-10    |
+|-----------+------------+----------|
+#+BEGIN_SRC Stata
+orginclude "diaglist.txt", dir($LocalOutDir)
+#+END_SRC Stata
+
+Surgery/operation codes:
+#+ATTR_LaTeX: :align |l|p{5cm}|p{7cm}|
+| Operation | Type | SKScode |
+|-----------+-----------------------+-------|
+#+BEGIN_SRC Stata
+orginclude "oprlist.txt", dir($LocalOutDir)
+#+END_SRC Stata
+
+Procedure codes:
+#+ATTR_LaTeX: :align |l|p{5cm}|p{7cm}|
+| Procedure | Type | SKScode |
+|-----------+-----------------------+-------|
+#+BEGIN_SRC Stata
+orginclude "ubelist.txt", dir($LocalOutDir)
+#+END_SRC Stata
+
+Baseline medication based on prescriptions whithin 365 days before
+baseline (date of first drug prescription).
+
+#+ATTR_LaTeX: :align |l|p{5cm}|p{7cm}|
+| Covariate | Medication | ATC |
+|-----------+-----------------------+-------|
+#+BEGIN_SRC Stata
+orginclude "medilist.txt", dir($LocalOutDir)
+#+END_SRC Stata
+
+#+BEGIN_COMMENT
+The lab code dictionary has been screened for codes related to
+measurements on kidney function. The included
+codes are.
+#+ATTR_LATeX: :align |l|p{5cm}|p{5cm}|
+| Covariate | labCodes   | Lab-codes    |
+|-----------+------------+----------|
+#+BEGIN_SRC Stata
+orginclude "lablist.txt", dir($LocalOutDir)
+#+END_SRC Stata
+
+will be converted to eGFR, accoring to these formulas:
+
+#+BEGIN_EXAMPLE
+ eGFR = 144*(pcrcl/(0.7*88.4))^(-0.329)*0.993^age if sex = female and pcrcl <= 62
+ eGFR = 144*(pcrcl/(0.7*88.4))^(-1.209)*0.993^age if sex = female and pcrcl > 62
+ eGFR = 141*(pcrcl/(0.9*88.4))^(-0.411)*0.993^age if sex = male and pcrcl <= 80
+ eGFR = 141*(pcrcl/(0.9*88.4))^(-1.209)*0.993^age if sex = male and pcrcl > 80
+#+END_EXAMPLE
+where pcrcl is the recorded plasma creatine clearance (mmol/l).
+#+END_COMMENT
+
+** Variable categories and indicator definitions
+
+#+BEGIN_COMMENT
+A number of variables are defined with the following coding:
+#+BEGIN_SRC stata :wrap example
+qui label dir
+loc labels=r(names)
+foreach i in `labels'{
+label list `i'
+}
+#+END_SRC
+#+END_COMMENT
+
+
+#+BEGIN_COMMENT
+Stroke risk is ascertained by the CHA_{2}DS_{2}-VASc stroke risk score:
+#+INCLUDE: "cha2ds2vasc_description.txt"
+#+ATTR_LaTeX: :align |l|p{7cm}|p{7cm}|
+| Covariate | Diagnose   | ICD    |
+|-----------+-----------------------+-------|
+#+BEGIN_SRC Stata
+orginclude "cha2ds2vasc_lpr.txt", dir($LocalOutDir)
+#+END_SRC Stata
+
+#+ATTR_LaTeX: :align |l|p{7cm}|p{7cm}|
+| Covariate | Medication | ATC |
+|-----------+-----------------------+-------|
+#+BEGIN_SRC Stata
+orginclude "cha2ds2vasc_atc.txt", dir($LocalOutDir)
+#+END_SRC Stata
+#+END_COMMENT
+
+
+
+** Methods
+All the fancy statistical methods to be used bla bla
+
+Events are reported as number of event and event rates expresses as
+events pr 100 person years. Cumulative incidence rates for non-death
+events are calculated using the Aalen-Johansen
+estimator. Kaplan-Meyer estimator is used for all-cause death.
+
+might do a cox-analysis or other funny stuff.
+
+** Acknowledgements
+
+Remember to add following text an appropriate place in the eventual
+paper: /The Danish Health Data Agency provided the data for this study./

@@ -1,0 +1,52 @@
+#+BEGIN_COMMENT
+/* 
+
+*/
+#+END_COMMENT
+
+* Standardized difference plot
+#+BEGIN_SRC Stata
+/* Possibly edit the V18 to another variable name, table1 datasetnames;
+   and w and h which specifies dimension of pdf plot */
+/* Also edit drop lines to select rows for plot  */
+
+gl data1 	$LocalFinalData/table1.dta
+gl data2 	$LocalFinalData/table1W.dta
+
+preserve
+qui {
+  use $data1, clear
+
+ /************************************ MSD Plot *****************************************/
+ /* what to print with MDS plot */
+ /* for MSDnames, order of list must be equal to MSDvar list */
+ /* "|" equals space, (sub:2) is subscript 2 */
+gl chadsvasc   "|CHA(sub:2)DS(sub:2)-VASc" /* print CHA2DS2-VASc */
+gl MSDbase     "|1|year|baseline"          /* print "1  year baseline" */
+
+/* for MSDrows, list scores medication and diagnosis used in the plot */
+gl     RiskListMSD,  hasbledidate           hf_chadsvascidate              diabetes_chadsvascidate   hypertension_chadsvascidate
+gl     RiskListMSDL  Hasbled|score     Heart|Failure$chadsvasc   Diabetes$chadsvasc   Hypertension$chadsvasc
+gl     DiagListMSD  hf2idate
+gl     DiaglistMSDL  Heart|Failure
+gl     MediListMSD  warfarin  apixa    phen   dbgtran riva    statins  proton
+gl     MediListMSDL Warfarin$MSDbase Apixaban$MSDbase  Phenprogamon$MSDbase  Dabigatran$MSDbase Rivaroxaban$MSDbase Statins$MSDbase Proton$MSDbase
+
+/* final list for MSD */
+gl MSDrows  sex ageidate age65  $RiskListMSD  $DiagListMSD  $MediListMSD
+gl MSDnames Sex Age Age|+65 $RiskListMSDL $DiagListMSDL $MediListMSDL
+
+plotmsd V1 V2 V18, using($data1) rows($MSDrows) rowlabels($MSDlabels) vref(-0.1 0.1)
+
+  graph export "$LocalOutDir/balanceplot.png", replace
+  graph export "$LocalOutDir/balanceplot.pdf", replace
+
+  restore
+}
+
+display "#+CAPTION: Standardized difference plot. " _n(2)
+display "[[$LocalOutDir/balanceplot.png]]" _n(2)
+display _newline "(./balanceplot.png)" _n(2)
+
+#+END_SRC
+

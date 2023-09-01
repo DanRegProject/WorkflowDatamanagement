@@ -1,0 +1,150 @@
+#+BEGIN_COMMENT
+/* 
+
+*/
+#+END_COMMENT
+
+* ROC curve
+
+The R package timeROC by Paul Blanche is used to calculate c-statistics etc for
+survival data and with potential competing risk.
+If competing risk is present, two statistics are provided representing
+two different approaces to define the control. 1: a control id defined
+as a subject  that is free of any event, or 2: a control is defined as
+a subject that is not a case (but may  have experienced a competing
+event).
+#+BEGIN_SRC stata
+
+/* this makes ROC curves for every Endpoint, Marker/score and FUP, ajustment are needed if other graphs are needed */
+
+/* this script will prepare a dataset for R to calculate the ROC curves for each Follow up time and each endpoint event */
+/* will calculate confidens intervals with 1000 bootstrap samples */
+/* will save outfiles in outfolder in PDF and postscript format, will also save data calculated in R for later reporting / calculations */
+
+preserve
+loc keeplist /* list of variablenames that are to be used in the R script, will be filled later */
+
+/* Use this to select the relevant endpoints */
+/* other setup is taking information from $FUP and $Scores */
+
+loc endpoints $ENDP $ENDPd
+/* make endpoint times and status as variables and save ind the keeplist */
+foreach e in `endpoints'{
+  loc keeplist `keeplist' `e'Status `e'Stime
+  generate `e'Stime = (`e'EndDate - $index)
+  if strpos(upper("`e'"),"DEATH")==0 replace `e'Status=2 if `e'Status==0 & deathStatus==1 /* Code for competing risk */
+}
+
+/* Renames the score variables to avoid index time postfix */
+foreach m in $Scores{
+  rename `m'$index `m'
+}
+
+loc keeplist `keeplist' $Scores
+
+keep `keeplist'
+
+/* save data to R readable format */
+saveold $LocalWorkData/cstat.dta, replace version(12)
+/* some preparation to send commands to R */
+loc nw: word count $Scores
+loc Scores "c("
+foreach i of numlist 1/`nw'{
+	loc Scores = "`Scores'"+"'"+word("$Scores",`i')+"'"
+	if `i'<`nw' loc Scores = "`Scores'"+","
+}
+loc Scores = "`Scores'"+")"
+
+loc nw: word count $ENDPall
+dis "`nw'"
+loc ENDP "c("
+foreach i of numlist 1/`nw'{
+	loc ENDP = "`ENDP'"+"'"+word("$ENDPall",`i')+"'"
+	if `i'<`nw' loc ENDP = "`ENDP'"+","
+}
+loc ENDP = "`ENDP'"+")"
+
+loc nw: word count $FUP
+dis "`nw'"
+loc FUP "c("
+foreach i of numlist 1/`nw'{
+	loc FUP = "`FUP'"+word("$FUP",`i')
+	if `i'<`nw' loc FUP = "`FUP'"+","
+}
+loc FUP = "`FUP'"+")"
+
+
+/*Specification for call to R*/
+loc arg1 infile='$LocalWorkData/cstat.dta'
+/* Two datasets are generated one with data for the ROC curves and one with the bootstrap results*/
+loc arg2 resoutdir='$LocalFinalData'
+loc arg3 figoutdir='$LocalOutDir'
+/* which status code is event of interest */
+loc arg4 cause=1
+/* do ROC curves TRUE/FALSE */
+loc arg5 plot=TRUE
+/* scaling of time scale, choice of endpoints and markers */
+loc arg6 FUP=`FUP'
+loc arg7 scale=365.25
+loc arg8 MARK=`Scores'
+loc arg9 ENDP=`ENDP'
+/* CI are computed by bootstrapping, number of bootstraps */
+loc arg10 bootstrap=1000
+/* Optional further label for generated files*/
+*loc arg11 label=""
+/* just a print to control if ok specification */
+dis "`arg1' `arg2' `arg3' `arg4' `arg5'"
+dis "`arg6' `arg7' `arg8' `arg9' `arg10' `arg11'"
+shell "$RPROGRAM" CMD BATCH "--args `arg1' `arg2' `arg3' `arg4' `arg5' `arg6' `arg7' `arg8' `arg9' `arg10' `arg11' " ../../macros/R/cstattimeROC.R $LocalOutDir/cstat.Rout /* running R script on the saved dataset */
+
+/* displaying the figures created in R */
+if "`arg5'"=="plot=TRUE"{
+cd $LocalOutDir
+local filelist: dir . files "ROC*.eps"
+
+
+foreach file in `filelist'{
+
+	loc title subinstr("`file'","_"," ",.)
+	loc title substr(`title',10,.)
+	loc title substr(`title',1,strpos(`title',".")-1)
+
+	di "** " `title' _n
+
+  display "#+CAPTION: ROC curve." _n(2)
+  display "[[$LocalOutDir/`file']]" _n(2)
+  display "($LocalOutDir/`file')" _n
+}
+cd $LocalCodeDir
+}
+
+restore
+
+
+preserve
+
+use "$LocalFinalData/cstatout.dta", replace
+/* to calculate Positive predictive values the population prevalence is needed */
+loc prev 0.10
+loc ppv
+foreach g in " " _1 _2{
+	cap gen PPV`g' = (TP*`prev')/(TP*`prev'+FP`g'*(1-`prev'))
+	if _rc == 0 loc ppv `ppv' PPV`g'
+}
+sort ENDP FUP MARK MARKcut
+format `ppv' %4.2f
+dis "PPV for the score levels"
+dis "#+BEGIN_EXAMPLE"
+list ENDP FUP MARK MARKcut `ppv'
+dis "#+END_EXAMPLE"
+
+keep MARK FUP ENDP AUC* LB* UB*
+format AUC* LB* UB* %4.2f
+
+duplicates drop
+dis "#+BEGIN_EXAMPLE"
+list
+dis "#+END_EXAMPLE"
+restore
+
+#+END_SRC
