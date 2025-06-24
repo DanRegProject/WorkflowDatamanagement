@@ -7,3 +7,20 @@ Some must be used within a datastep others are called outside. In the following 
 
 /dvt/
 
+%qualdiag(work.dvtqual, 
+          work.dvtdata, 
+          dvtdate, 
+          basedata=studie, 
+          keepbasevar=idate, 
+          hospdata=, 
+          if=dvtdate>idate, 
+          medi=, 
+          medidays=, 
+          oprube=ultraleg ct mrveno angio ventperf phlebo, 
+          oprubedays=10 10, 
+          incident=, 
+          label=, 
+          ajour=); 
+
+same can be used with /PE/
+the following SKS codes are used for UBE: ultraleg: UXUG, ct: UXCG UXCC, mrveno: UXZ52, ventperf: WLHGS, phlebo: UXAG05.
