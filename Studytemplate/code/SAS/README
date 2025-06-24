@@ -3,10 +3,10 @@ The essential files for constructing af data set joined and ready for further an
 Several SAS macros are provided to ease the usage of various datasources to create indicators useful for analysis.
 Some must be used within a datastep others are called outside. In the following some examples are given.
 
-%qualdiag() is used to validate diagnoses by other datasources observed within a limited timeperiod. These examples return instances where a dvt or a pe diagnosis is qualifies by either a ultrasound or a ct scan.
+%qualdiag() is used to validate diagnoses by other datasources observed within a limited timeperiod. 
+These examples return instances where a dvt or a pe diagnosis is qualified by either an ultrasound or a ct scan.
 
 /dvt/
-
 %qualdiag(work.dvtqual, 
           work.dvtdata, 
           dvtdate, 
