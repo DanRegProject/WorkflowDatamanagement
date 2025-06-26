@@ -7,8 +7,8 @@ Some must be used within a datastep others are called outside. In the following 
 These examples return instances where a dvt or a pe diagnosis is qualified by either an ultrasound or a ct scan.
 
 /dvt/
-%qualdiag(work.dvtqual, 
-          work.dvtdata, 
+%qualdiag(work.lprdvtqualall(rename(dvtdate=indate)), 
+          work.dvtdata(rename=(indate=dvtdate)), 
           dvtdate, 
           basedata=studie, 
           keepbasevar=idate, 
@@ -24,3 +24,4 @@ These examples return instances where a dvt or a pe diagnosis is qualified by ei
 
 same can be used with /PE/
 the following SKS codes are used for UBE: ultraleg: UXUG, ct: UXCG UXCC, mrveno: UXZ52, ventperf: WLHGS, phlebo: UXAG05.
+The example used above enable subsequent calls with %mergediag(). 
