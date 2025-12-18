@@ -3,10 +3,10 @@
 %start_log(&logdir, 2_1-EnsretVariable);
 %start_timer(masterdata); /* measure time for this macro */
 %macro ensretvar(head,old,new,in=master);
-    * head: prefix på datasæt ;
-    * old: liste af variabelnavne der skal omdøbes;
+    * head: prefix pÃ¥ datasÃ¦t ;
+    * old: liste af variabelnavne der skal omdÃ¸bes;
     * new: liste af nye variabelnavne;
-    * in:   libname hvor der læses fra, option ;
+    * in:   libname hvor der lÃ¦ses fra, option ;
 %local i j var dsn;
 %if %upcase(&test)=TRUE %then %let in=WORK;
 
@@ -29,10 +29,10 @@
                         run;
                         quit;
                         %end;
-                    %else %put WARNING: Variablen %scan(&old,&j) findes ikke i datasættet &in..&dsn;
+                    %else %put WARNING: Variablen %scan(&old,&j) findes ikke i datasÃ¦ttet &in..&dsn;
                     %end;
                 %end;
-            %else %put ERROR: Datasættet &in..&dsn findes ikke ;
+            %else %put ERROR: DatasÃ¦ttet &in..&dsn findes ikke ;
             %let i=%eval(&i+1);
             %end;
         %end;
@@ -41,16 +41,16 @@
 %ensretvar(lpr_adm,   RECNUM  inddto  uddto spec sghamt sgh afd sex kontaars indm hsgh hafd hendto henm opdatdto,
 		      id start slut hovedspeciale_ans region_ans shak_sgh_ans shak_afd_ans koen kontaktaarsag prioritet shak_sgh_hen shak_afd_hen dato_henvisning henvisningsmaade dato_indberetning_start);
 *%ensretvar(lpr_bes,  recnum  , kontakt_id);
-%ensretvar(lpr_diag,  recnum  , kontakt_id);
+%ensretvar(lpr_diag,  recnum  version, kontakt_id version_diag);
 %ensretvar(lpr_opr,   recnum  , kontakt_id);
-%ensretvar(lpr_sksopr,recnum opr odto ,kontakt_id  proc start_proc );
-%ensretvar(lpr_sksube,recnum opr odto,kontakt_id  proc start_proc);
+%ensretvar(lpr_sksopr,recnum version opr odto ,kontakt_id  version_proc proc start_proc );
+%ensretvar(lpr_sksube,recnum version opr odto,kontakt_id  version_proc proc start_proc);
 %ensretvar(priv_adm,  recnum inddto uddto, kontakt_id start slut);
-%ensretvar(priv_diag, recnum  , kontakt_id);
-%ensretvar(priv_sksopr,recnum opr odto,kontakt_id  proc start_proc);
-%ensretvar(priv_sksube,recnum opr odto,kontakt_id  proc start_proc);
+%ensretvar(priv_diag, recnum version, kontakt_id version_diag);
+%ensretvar(priv_sksopr,recnum version opr odto,kontakt_id version_proc  proc start_proc);
+%ensretvar(priv_sksube,recnum version opr odto,kontakt_id version_proc proc start_proc);
 %ensretvar(psyk_adm,   recnum  inddto  uddto, kontakt_id start slut);
-%ensretvar(psyk_diag,  recnum  , kontakt_id);
+%ensretvar(psyk_diag,  recnum  version , kontakt_id version_diag);
 %ensretvar(lpr_f_diagnoser,dw_ek_kontakt diagnosekode diagnosetype diagnosekode_parent diagnosetype_parent,
           kontakt_id diag dagkode_parent diagtype_parent);
 %ensretvar(lpr_f_kontakter,dw_ek_kontakt dato_start dato_slut tidspunkt_start tidspunkt_slut aktionsdiagnose dw_ek_forloeb,
@@ -66,3 +66,4 @@
 
 %end_timer(masterdata, text=Measure time for master);
 %end_log;
+
