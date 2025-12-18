@@ -3,7 +3,7 @@
 %start_log(&logdir, 1-KopierDataFraRaw);
 %start_timer(masterdata); /* measure time for this macro */
 
-/* Dan ny integer n¯gle til erstatning af pnr */
+/* Dan ny integer n√∏gle til erstatning af pnr */
 proc sort data=&studiepop out=work._sortedpop_ nodupkey;
     by pnr;
 run;
@@ -12,10 +12,10 @@ data master.keyPNR; set work._sortedpop_;
 run;
 
 /* copy data from rawdata to workdata and if relevant generate indexes         */
-/* hvis pnr indgÂr i datasÊttet sÂ erstattes den med den nye heltals ident     */
+/* hvis pnr indg√•r i datas√¶ttet s√• erstattes den med den nye heltals ident     */
 %macro mycopy(head,in=rawdata,out=master,keep=,pnrvar=pnr);
-    * head: prefix pÂ datasÊt ;
-    * in:   libname hvor der lÊses fra ;
+    * head: prefix p√• datas√¶t ;
+    * in:   libname hvor der l√¶ses fra ;
     * out:  libname hvor data skal placeres ;
     * keep: restriktion til disse variable, option ;
     * pnrvar: variabel med personident, default pnr, option ;
@@ -28,10 +28,10 @@ run;
             where libname=upcase("&in") and index(memname,upcase("&head"))>0 and upcase(memtype)="DATA";
 
     proc sql noprint;
-        create table char_vars as select name, max(length) as maxlength, min(length) as minlength
+        create table char_vars as select upcase(name) as name, max(length) as maxlength, min(length) as minlength
             from dictionary.columns
             where libname=upcase("&in") and index(memname,upcase("&head"))>0 and upcase(type)="CHAR"
-            group by name
+            group by upcase(name)
             having minlength<maxlength
             order by name;
 
@@ -62,8 +62,8 @@ run;
                 run;
                 %END;
 
-                        /* omd¯b alle variable som har et foranstillet type indikator fx C_, D_  */
-                        /* fjern variabeltype indikatorer som DS bruger pÂ isÊr LPR2 variable */
+                        /* omd√∏b alle variable som har et foranstillet type indikator fx C_, D_  */
+                        /* fjern variabeltype indikatorer som DS bruger p√• is√¶r LPR2 variable */
             proc sql noprint;
                 select nvar into :num_vars
                     from dictionary.tables
@@ -85,7 +85,7 @@ run;
                     %END;
                 ;
             quit; run;
-                        /* Erstat pnr med heltalsl¯benummer fra keyPNR */
+                        /* Erstat pnr med heltalsl√∏benummer fra keyPNR */
             %LET Nudenid = 0;
             Data &out..&ds;
                 %IF %varexist(_tempdata_,pnr) %THEN %DO; /* erstat personident hvis relevant */
@@ -103,7 +103,7 @@ run;
                 %else
                     set _tempdata_;;
             run;
-            %IF &Nudenid>0 %THEN %put WARNING: &Nudenid rÊkker uden ident i master.keyPNR!;
+            %IF &Nudenid>0 %THEN %put WARNING: &Nudenid r√¶kker uden ident i master.keyPNR!;
             %LET i=%eval(&i+1);
             %END;
         %else %put ERROR: The file &in..&ds does not exist;
@@ -128,7 +128,7 @@ options compress=YES;
 %mycopy(priv_diag);
 %mycopy(priv_sksopr);
 %mycopy(priv_sksube);
-%mycopy(psyk_adm); /*psyk_adm fejlleveret som Ârstabeller 2002-2018*/
+%mycopy(psyk_adm); /*psyk_adm fejlleveret som √•rstabeller 2002-2018*/
 %mycopy(psyk_diag);
 %mycopy(lpr_f_diagnoser);
 %mycopy(lpr_f_kontakter);
@@ -161,3 +161,4 @@ options compress=YES;
 
 %END_timer(masterdata, text=Measure time for master);
 %END_log;
+
