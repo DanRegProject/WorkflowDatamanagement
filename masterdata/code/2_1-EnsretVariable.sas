@@ -39,7 +39,7 @@
     %mend;
 
 %ensretvar(lpr_adm,   RECNUM  inddto  uddto spec sghamt sgh afd sex kontaars indm hsgh hafd hendto henm opdatdto,
-		      id start slut hovedspeciale_ans region_ans shak_sgh_ans shak_afd_ans koen kontaktaarsag prioritet shak_sgh_hen shak_afd_hen dato_henvisning henvisningsmaade dato_indberetning_start);
+		      kontakt_id start slut hovedspeciale_ans region_ans shak_sgh_ans shak_afd_ans koen kontaktaarsag prioritet shak_sgh_hen shak_afd_hen dato_henvisning henvisningsmaade dato_indberetning_start);
 *%ensretvar(lpr_bes,  recnum  , kontakt_id);
 %ensretvar(lpr_diag,  recnum  version, kontakt_id version_diag);
 %ensretvar(lpr_opr,   recnum  , kontakt_id);
@@ -62,8 +62,11 @@
 %ensretvar(lpr_f_procedurer_andre,
     dw_ek_kontakt procedurekode dato_start dato_slut tidspunkt_start tidspunkt_slut proceduretype procedurekode_parent proceduretype_parent dw_ek_forloeb,
     kontakt_id  proc start_proc slut_proc startid_proc sluttid_proc proctype prockode_parent proctype_parent forloeb_id);
+%ensretvar(lpr_f_procedurer_andre,dato_henvisning tidspunkt_henvisning,dato_henvisning_proc tidspunkt_henvisning_proc);
 %ensretvar(lpr_f_procedurer_kirurgi,dw_ek_kontakt procedurekode dato_start proceduretype procedurekode_parent proceduretype_parent dw_ek_forloeb, kontakt_id  proc start_proc proctype prockode_parent proctype_parent forloeb_id);
+%ensretvar(lpr_f_procedurer_kirurgi,dato_henvisning tidspunkt_henvisning,dato_henvisning_proc tidspunkt_henvisning_proc);
 
 %end_timer(masterdata, text=Measure time for master);
 %end_log;
+
 
