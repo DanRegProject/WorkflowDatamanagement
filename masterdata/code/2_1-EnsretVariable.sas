@@ -52,9 +52,9 @@
 %ensretvar(psyk_adm,   recnum  inddto  uddto, kontakt_id start slut);
 %ensretvar(psyk_diag,  recnum  version , kontakt_id version_diag);
 %ensretvar(lpr_f_diagnoser,dw_ek_kontakt diagnosekode diagnosetype diagnosekode_parent diagnosetype_parent,
-          kontakt_id diag diagkode_parent diagtype_parent);
+          kontakt_id diag diagtype diagkode_parent diagtype_parent);
 %ensretvar(lpr_f_kontakter,dw_ek_kontakt dato_start dato_slut tidspunkt_start tidspunkt_slut aktionsdiagnose dw_ek_forloeb,
-                           ontakt_id start slut starttid sluttid adiag forloeb_id);
+                           kontakt_id start slut starttid sluttid adiag forloeb_id);
 *%ensretvar(lpr_f_forloeb,  dw_ek_forloeb dw_ek_helbredsforloeb ,forloeb_id helbredsforloeb_id);
 *%ensretvar(lpr_f_helbredsforloeb,dw_ek_forloeb dw_ek_helbredsforloeb ,forloeb_id helbredsforloeb_id);
 *%ensretvar(lpr_f_forloebsmarkoerer,dw_ek_forloeb ,forloeb_id);
@@ -68,6 +68,7 @@
 
 %end_timer(masterdata, text=Measure time for master);
 %end_log;
+
 
 
 
