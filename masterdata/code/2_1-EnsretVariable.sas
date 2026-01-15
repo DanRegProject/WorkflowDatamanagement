@@ -9,13 +9,13 @@
     * in:   libname hvor der læses fra, option ;
 %local i j var dsn;
 %if %upcase(&test)=TRUE %then %let in=WORK;
-
+%LET head=%UPCASE(&head);
 %if %sysfunc(countw(&old)) ne %sysfunc(countw(&new)) %then %put ERROR: Antal variabelnavne er ikke ens;
 %else %do;
         proc sql noprint;
             select distinct memname into :ds_names separated by ' '
                 from dictionary.tables
-                where libname=upcase("&in") and index(memname,upcase("&head"))>0 and upcase(memtype)="DATA";
+                where libname=upcase("&in") and prxmatch("/^&head.([^A-Za-z]|$)/", memname) > 0 and upcase(memtype)="DATA";
             %let i=1;
             %do %while  (%scan(&ds_names,&i) ne );
                 %let dsn=%scan(&ds_names,&i);
@@ -68,6 +68,7 @@
 
 %end_timer(masterdata, text=Measure time for master);
 %end_log;
+
 
 
 
