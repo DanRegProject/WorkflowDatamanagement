@@ -21,17 +21,18 @@ run;
     * pnrvar: variabel med personident, default pnr, option ;
 %LOCAL num_vars i v l lenstr ds_names used;
 %LET ds_names=;
+%LET head=%UPCASE(&head);
 %IF %UPCASE(&test)=TRUE %THEN %LET out=WORK;
 
     proc sql noprint;
         select distinct memname into :ds_names separated by ' '
             from dictionary.tables
-            where libname=upcase("&in") and index(memname,upcase("&head"))>0 and upcase(memtype)="DATA";
+            where libname=upcase("&in") and prxmatch("/^&head.([^A-Za-z]|$)/", memname) > 0 and upcase(memtype)="DATA";
 
     proc sql noprint;
         create table char_vars as select upcase(name) as name, max(length) as maxlength, min(length) as minlength
             from dictionary.columns
-            where libname=upcase("&in") and index(memname,upcase("&head"))>0 and upcase(type)="CHAR"
+            where libname=upcase("&in") and prxmatch("/^&head.([^A-Za-z]|$)/", memname) > 0 and upcase(type)="CHAR"
             group by upcase(name)
             having minlength<maxlength
             order by name;
@@ -166,5 +167,6 @@ options compress=YES;
 
 %END_timer(masterdata, text=Measure time for master);
 %END_log;
+
 
 
