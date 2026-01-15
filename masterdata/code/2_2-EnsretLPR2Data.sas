@@ -3,17 +3,17 @@
 %start_timer(masterdata); /* measure time for this macro */
 
 %macro ensretlpr2(head, in=master,out=master);
-    * head: prefix på datasæt ;
-    * in:   libname hvor der læses fra ;
+    * head: prefix pÃ¥ datasÃ¦t ;
+    * in:   libname hvor der lÃ¦ses fra ;
     * out:  libname hvor data skal placeres ;
-%local i dsn;
+%local i dsn ds_names;
 %if %upcase(&test)=TRUE %then %let in=WORK;
 %if %upcase(&test)=TRUE %then %let out=WORK;
 %let head=%upcase(&head);
     proc sql noprint;
         select distinct memname into :ds_names separated by ' '
             from dictionary.tables
-            where libname=upcase("&in") and index(memname,upcase("&head"))>0 and upcase(memtype)="DATA";
+            where libname=upcase("&in") and prxmatch("/^&head.([^A-Za-z]|$)/", memname) > 0 and upcase(memtype)="DATA";
 
         %if %index(&head,ADM)>0  %then %do;
         /* ADM */;
@@ -124,3 +124,4 @@
 
 %end_timer(masterdata, text=Measure time for master);
 %end_log;
+
