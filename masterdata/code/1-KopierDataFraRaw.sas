@@ -19,7 +19,8 @@ run;
     * out:  libname hvor data skal placeres ;
     * keep: restriktion til disse variable, option ;
     * pnrvar: variabel med personident, default pnr, option ;
-%LOCAL num_vars i v l lenstr;
+%LOCAL num_vars i v l lenstr ds_names used;
+%LET ds_names=;
 %IF %UPCASE(&test)=TRUE %THEN %LET out=WORK;
 
     proc sql noprint;
@@ -72,6 +73,7 @@ run;
                     from dictionary.columns
                     where libname="WORK" and upper(memname)="_TEMPDATA_";
                 %sqlquit;
+            %LET used=;
             proc datasets library=work nolist;
                 modify _tempdata_;
                 %DO v=1 %to &num_vars;
@@ -80,7 +82,10 @@ run;
                         "%substr(&&var&v,1,2)"="D_" OR
                         "%substr(&&var&v,1,2)"="V_"
                         %THEN %DO;
-                        rename &&var&v = %substr(&&var&v,3,%eval(&l-2));
+                            %IF %INDEX(&used,%substr(&&var&v,3,%eval(&l-2)))=0 %THEN %DO;
+                                rename &&var&v = %substr(&&var&v,3,%eval(&l-2));
+                                %LET used = &used %substr(&&var&v,3,%eval(&l-2));
+                            %END;
                         %END;
                     %END;
                 ;
@@ -161,4 +166,5 @@ options compress=YES;
 
 %END_timer(masterdata, text=Measure time for master);
 %END_log;
+
 
