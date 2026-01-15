@@ -1,15 +1,15 @@
 
 /* Anden del 3 */
-%start_log(&logdir, 3_2-OmkodeMedNøgler);
+%start_log(&logdir, 3_2-OmkodeMedNÃ¸gler);
 %start_timer(masterdata); /* measure time for this macro */
 
-/* De dannede nøgler appliceres på alle de relevante tabeller hvor variablen indgår */
+/* De dannede nÃ¸gler appliceres pÃ¥ alle de relevante tabeller hvor variablen indgÃ¥r */
 %macro applykey(head,ident,in=master,out=master);
-    * head: prefix på datasæt ;
+    * head: prefix pÃ¥ datasÃ¦t ;
     * ident: variabel med ident;
-    * in:   libname hvor der læses fra, option ;
+    * in:   libname hvor der lÃ¦ses fra, option ;
     * out:  libname hvor der skrives til, option ;
-%local i dsn;
+%local i dsn ds_names;
 %if %upcase(&test)=TRUE %then %let in=WORK;
 %if %upcase(&test)=TRUE %then %let out=WORK;
 %let head=%upcase(&head);
@@ -23,7 +23,7 @@
         proc sql noprint;
     select distinct memname into :ds_names separated by ' '
         from dictionary.tables
-        where libname=upcase("&in") and index(memname,upcase("&head"))>0 and upcase(memtype)="DATA";
+        where libname=upcase("&in") and prxmatch("/^&head.([^A-Za-z]|$)/", memname) > 0 and upcase(memtype)="DATA";
     %let i=1;
     %do %while  (%scan(&ds_names,&i) ne );
         %let dsn=%scan(&ds_names,&i);
@@ -42,16 +42,16 @@
                         if a and not b then _Nudenid_+1;
                         call symput('Nudenid',_Nudenid_);
                     run;
-                    %if &Nudenid>0 %then %put WARNING: &Nudenid rækker uden ident i &in..key&postfix.&ident!;
+                    %if &Nudenid>0 %then %put WARNING: &Nudenid rÃ¦kker uden ident i &in..key&postfix.&ident!;
 
                     %end;
-                %else %put ERROR: Identen &ident findes ikke i datasættet &in..&dsn;
+                %else %put ERROR: Identen &ident findes ikke i datasÃ¦ttet &in..&dsn;
                 %end;
-            %else %put ERROR: Datasættet &in..&dsn findes ikke ;
+            %else %put ERROR: DatasÃ¦ttet &in..&dsn findes ikke ;
             %let i=%eval(&i+1);
             %end;
         %end;
-    %else %put ERROR: Nøgle datasættet &in..key&postfix.&ident findes ikke ;
+    %else %put ERROR: NÃ¸gle datasÃ¦ttet &in..key&postfix.&ident findes ikke ;
     %mend;
 /* familie_id */
 %applykey(bef          ,familie_id);
@@ -83,3 +83,4 @@
 %applykey(lpr_f_procedurer_kirurgi,kontakt_id);
 %end_timer(masterdata, text=Measure time for master);
 %end_log;
+
