@@ -33,7 +33,7 @@
                     Data &out..&dsn(rename=(ny&ident=&ident));
                         _Nudenid_=0;
                         retain _Nudenid_;
-                        merge _tempdata_(in=a end=last) &in..&keyfile(in=b rename=(&ident=&var));
+                        merge _tempdata_(in=a) &in..&keyfile(in=b rename=(&ident=&var))  end=last;
                         by &var;
                         drop &var _Nudenid_;
                         if a;
@@ -91,6 +91,7 @@
 %applykey(lpr_f_procedurer_kirurgi,&keyvar,&keyfile);
 %end_timer(masterdata, text=Measure time for master);
 %end_log;
+
 
 
 
