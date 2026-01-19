@@ -62,7 +62,7 @@ data master.depclass;
 		deptypetxt=deptypetxt_;
 	end;
 	endyear=year;
-%	if last.hospitalunit then output;
+	if last.hospitalunit then output;
 	keep hospital hospitalunit startyear endyear deptype deptypetxt;
 run;
 
@@ -80,3 +80,4 @@ run;
 
 %end_timer(masterdata, text=Measure time for master);
 %end_log;
+
