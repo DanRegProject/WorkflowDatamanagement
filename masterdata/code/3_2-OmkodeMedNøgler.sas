@@ -52,34 +52,45 @@
     %else %put ERROR: Nøgle datasættet &in..&keyfile findes ikke ;
     %mend;
 /* familie_id */
-%applykey(bef          ,familie_id);
-%applykey(faik         ,familie_id);
+%let keyvar=familie_id;
+%let keyfile=keyfamilie_id;
+%applykey(bef          ,&keyvar,&keyfile);
+%applykey(faik         ,&keyvar,&keyfile);
 /* kontakt_id lpr2 */
-%applykey(lpr_adm      ,kontakt_id);
-%applykey(lpr_bes      ,kontakt_id);
-%applykey(lpr_diag     ,kontakt_id);
-*%applykey(lpr_opr     ,kontakt_id);
-%applykey(lpr_sksopr   ,kontakt_id);
-%applykey(lpr_sksube   ,kontakt_id);
-%applykey(priv_adm     ,kontakt_id);
-%applykey(priv_diag    ,kontakt_id);
-%applykey(priv_sksopr  ,kontakt_id);
-%applykey(priv_sksube  ,kontakt_id);
-%applykey(psyk_adm     ,kontakt_id);
-%applykey(psyk_diag    ,kontakt_id);
+%let keyvar=kontakt_id;
+%let keyfile=keylprkontakt_id;
+%applykey(lpr_adm      ,&keyvar,&keyfile);
+%applykey(lpr_bes      ,&keyvar,&keyfile);
+%applykey(lpr_diag     ,&keyvar,&keyfile);
+*%applykey(lpr_opr     ,&keyvar,&keyfile);
+%applykey(lpr_sksopr   ,&keyvar,&keyfile);
+%applykey(lpr_sksube   ,&keyvar,&keyfile);
+%let keyfile=keyprivkontakt_id;
+%applykey(priv_adm     ,&keyvar,&keyfile);
+%applykey(priv_diag    ,&keyvar,&keyfile);
+%applykey(priv_sksopr  ,&keyvar,&keyfile);
+%applykey(priv_sksube  ,&keyvar,&keyfile);
+%let keyfile=keypsykkontakt_id;
+%applykey(psyk_adm     ,&keyvar,&keyfile);
+%applykey(psyk_diag    ,&keyvar,&keyfile);
 /* forloeb_id - lpr3 */
-%applykey(lpr_f_forloeb,   forloeb_id);
-%applykey(lpr_f_kontakter, forloeb_id);
-%applykey(lpr_f_resultater,forloeb_id);
-%applykey(lpr_f_procedurer_andre,forloeb_id);
-%applykey(lpr_f_procedurer_kirurgi,forloeb_id);
+%let keyvar=forloeb_id;
+%let keyfile=keylpr_fforloeb_id;
+%applykey(lpr_f_forloeb,   &keyvar,&keyfile);
+%applykey(lpr_f_kontakter, &keyvar,&keyfile);
+%applykey(lpr_f_resultater,&keyvar,&keyfile);
+%applykey(lpr_f_procedurer_andre,&keyvar,&keyfile);
+%applykey(lpr_f_procedurer_kirurgi,&keyvar,&keyfile);
 /* kontakt_id lpr3 */
-%applykey(lpr_f_diagnoser,kontakt_id);
-%applykey(lpr_f_kontakter,kontakt_id);
-%applykey(lpr_f_resultater,kontakt_id);
-%applykey(lpr_f_procedurer_andre,kontakt_id);
-%applykey(lpr_f_procedurer_kirurgi,kontakt_id);
+%let keyvar=forloeb_id;
+%let keyfile=keylpr_fkontakt_id;
+%applykey(lpr_f_diagnoser,&keyvar,&keyfile);
+%applykey(lpr_f_kontakter,&keyvar,&keyfile);
+%applykey(lpr_f_resultater,&keyvar,&keyfile);
+%applykey(lpr_f_procedurer_andre,&keyvar,&keyfile);
+%applykey(lpr_f_procedurer_kirurgi,&keyvar,&keyfile);
 %end_timer(masterdata, text=Measure time for master);
 %end_log;
+
 
 
