@@ -4,22 +4,20 @@
 %start_timer(masterdata); /* measure time for this macro */
 
 /* De dannede nøgler appliceres på alle de relevante tabeller hvor variablen indgår */
-%macro applykey(head,ident,in=master,out=master);
+%macro applykey(head,ident,keyfile,in=master,out=master,var=);
     * head: prefix på datasæt ;
-    * ident: variabel med ident;
+    * ident: variabel med ident;    
+    * keyfile: nøglefilen med ident;
     * in:   libname hvor der læses fra, option ;
     * out:  libname hvor der skrives til, option ;
+    * var: variablen i datasættet der skal omnøgles, angives hvis den hedder andet end identen;
 %local i dsn ds_names;
 %if %upcase(&test)=TRUE %then %let in=WORK;
 %if %upcase(&test)=TRUE %then %let out=WORK;
 %let head=%upcase(&head);
 %let postfix=;
-%if %index(&head,&LPR3grp)>0 %then %let postfix=&LPR3grp;
-%if %index(&head,LPR_)>0 and %index(&head,LPR_F)=0 %then %let postfix=lpr;
-%if %index(&head,PRIV)>0 %then %let postfix=priv;
-%if %index(&head,PSYK)>0 %then %let postfix=psyk;
-
-%if %sysfunc(exist(&in..key&postfix.&ident)) %then %do; /* test om filen findes */
+%IF &var= %THEN %LET var=&ident;
+%if %sysfunc(exist(&in..&keyfile)) %then %do; /* test om filen findes */
         proc sql noprint;
     select distinct memname into :ds_names separated by ' '
         from dictionary.tables
@@ -30,28 +28,28 @@
         %if %sysfunc(exist(&in..&dsn)) %then %do; /* test om filen findes */;
             %if %varexist(&in..&&dsn,&ident) %then %do; /* evt sortere efter personident */;
                     proc sort data=&in..&dsn out=_tempdata_;
-                        by &ident;
+                        by &var;
                     run;
                     Data &out..&dsn(rename=(ny&ident=&ident));
                         _Nudenid_=0;
                         retain _Nudenid_;
-                        merge _tempdata_(in=a) &in..key&postfix.&ident(in=b);
-                        by &ident;
-                        drop &ident _Nudenid_;
+                        merge _tempdata_(in=a end=last) &in..&keyfile(in=b rename=(&ident=&var));
+                        by &var;
+                        drop &var _Nudenid_;
                         if a;
                         if a and not b then _Nudenid_+1;
-                        call symput('Nudenid',_Nudenid_);
+                        if last then call symput('Nudenid',_Nudenid_);
                     run;
-                    %if &Nudenid>0 %then %put WARNING: &Nudenid rækker uden ident i &in..key&postfix.&ident!;
+                    %if &Nudenid>0 %then %put WARNING: &Nudenid rækker uden ident i &in..&keyfile!;
 
                     %end;
-                %else %put ERROR: Identen &ident findes ikke i datasættet &in..&dsn;
+                %else %put ERROR: Identen &var findes ikke i datasættet &in..&dsn;
                 %end;
             %else %put ERROR: Datasættet &in..&dsn findes ikke ;
             %let i=%eval(&i+1);
             %end;
         %end;
-    %else %put ERROR: Nøgle datasættet &in..key&postfix.&ident findes ikke ;
+    %else %put ERROR: Nøgle datasættet &in..&keyfile findes ikke ;
     %mend;
 /* familie_id */
 %applykey(bef          ,familie_id);
@@ -83,4 +81,5 @@
 %applykey(lpr_f_procedurer_kirurgi,kontakt_id);
 %end_timer(masterdata, text=Measure time for master);
 %end_log;
+
 
