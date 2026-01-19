@@ -38,7 +38,7 @@
                         drop &var _Nudenid_;
                         if a;
                         if a and not b then _Nudenid_+1;
-                        if last then call symput('Nudenid',_Nudenid_);
+                        /*if last then*/ call symput('Nudenid',_Nudenid_);
                     run;
                     %if &Nudenid>0 %then %put WARNING: &Nudenid rækker uden ident i &in..&keyfile!;
 
@@ -91,6 +91,7 @@
 %applykey(lpr_f_procedurer_kirurgi,&keyvar,&keyfile);
 %end_timer(masterdata, text=Measure time for master);
 %end_log;
+
 
 
 
