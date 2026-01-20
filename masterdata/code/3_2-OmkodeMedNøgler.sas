@@ -26,7 +26,7 @@
     %do %while  (%scan(&ds_names,&i) ne );
         %let dsn=%scan(&ds_names,&i);
         %if %sysfunc(exist(&in..&dsn)) %then %do; /* test om filen findes */;
-            %if %varexist(&in..&&dsn,&ident) %then %do; /* evt sortere efter personident */;
+            %if %varexist(&in..&&dsn,&var) %then %do; /* evt sortere efter personident */;
                     proc sort data=&in..&dsn out=_tempdata_;
                         by &var;
                     run;
@@ -91,6 +91,7 @@
 %applykey(lpr_f_procedurer_kirurgi,&keyvar,&keyfile);
 %end_timer(masterdata, text=Measure time for master);
 %end_log;
+
 
 
 
