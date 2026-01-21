@@ -101,9 +101,9 @@ run;
                     by pnr;
                     drop pnr;
                     rename nypnr=pnr;
-                    if a and b;
-                    if a and not b then _Nudenid_+1;
-                    if _Nudenid_>0 then call symput('Nudenid',_Nudenid_);
+                    if b;
+                    if b and not a and first.pnr then _Nudenid_+1;
+                    call symput('Nudenid',_Nudenid_);
                     drop _Nudenid_;
                     %END;
                 %else
@@ -167,6 +167,7 @@ options compress=YES;
 
 %END_timer(masterdata, text=Measure time for master);
 %END_log;
+
 
 
 
