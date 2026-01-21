@@ -85,7 +85,7 @@ run;
                         "%substr(&&var&v,1,2)"="D_" OR
                         "%substr(&&var&v,1,2)"="V_"
                         %THEN %DO;
-                            %IF %INDEX(&used,%substr(&&var&v,3,%eval(&l-2)))=0 %THEN %DO;
+                            %IF %SYSFUNC(INDEXW(&used,%substr(&&var&v,3,%eval(&l-2))))=0 %THEN %DO;
                                 rename &&var&v = %substr(&&var&v,3,%eval(&l-2));
                                 %LET used = &used %substr(&&var&v,3,%eval(&l-2));
                             %END;
@@ -169,6 +169,7 @@ options compress=YES;
 
 %END_timer(masterdata, text=Measure time for master);
 %END_log;
+
 
 
 
