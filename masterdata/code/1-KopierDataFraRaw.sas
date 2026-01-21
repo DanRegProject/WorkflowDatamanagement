@@ -29,6 +29,8 @@ run;
             from dictionary.tables
             where libname=upcase("&in") and prxmatch("/^&head.([^A-Za-z]|$)/", memname) > 0 and upcase(memtype)="DATA";
 
+%IF &ds_names eq %THEN %PUT ERROR: The header/file &head does not identify any datasets;
+
     proc sql noprint;
         create table char_vars as select upcase(name) as name, max(length) as maxlength, min(length) as minlength
             from dictionary.columns
@@ -110,9 +112,9 @@ run;
                     set _tempdata_;;
             run;
             %IF &Nudenid>0 %THEN %put WARNING: &Nudenid rækker uden ident i master.keyPNR!;
-            %LET i=%eval(&i+1);
             %END;
-        %else %put ERROR: The file &in..&ds does not exist;
+            %else %put ERROR: The file &in..&ds does not exist;
+            %LET i=%eval(&i+1);
         %END;
     %mend;
 
@@ -167,6 +169,7 @@ options compress=YES;
 
 %END_timer(masterdata, text=Measure time for master);
 %END_log;
+
 
 
 
