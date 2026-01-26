@@ -1,28 +1,22 @@
 /* Herfra er det datamanagement */
 /* Start del 1 */
-%start_log(&logdir, 1-KopierDataFraRaw);
-%start_timer(masterdata); /* measure time for this macro */
-
-/* Dan ny integer nøgle til erstatning af pnr */
-proc sort data=&studiepop out=work._sortedpop_ nodupkey;
-    by pnr;
-run;
-data master.keyPNR; set work._sortedpop_;
-    nypnr=_N_;
-run;
 
 /* copy data from rawdata to workdata and if relevant generate indexes         */
 /* hvis pnr indgår i datasættet så erstattes den med den nye heltals ident     */
-%macro mycopy(head,in=rawdata,out=master,keep=,pnrvar=pnr);
+%macro mycopy(head,in=rawdata,out=master,keep=,pnrvar=pnr,mode=data);
+%start_log(&logdir, 1-KopierDataFraRaw_&head);
+%start_timer(masterdata); /* measure time for this macro */
     * head: prefix på datasæt ;
     * in:   libname hvor der læses fra ;
     * out:  libname hvor data skal placeres ;
     * keep: restriktion til disse variable, option ;
     * pnrvar: variabel med personident, default pnr, option ;
-%LOCAL num_vars i v l lenstr ds_names used;
+%LOCAL num_vars i v l lenstr ds_names used ndel;
 %LET ds_names=;
 %LET head=%UPCASE(&head);
 %IF %UPCASE(&test)=TRUE %THEN %LET out=WORK;
+%LET in=%UPCASE(&in);
+%LET out=%UPCASE(&out);
 
     proc sql noprint;
         select distinct memname into :ds_names separated by ' '
@@ -48,74 +42,73 @@ run;
         len_stmt = catx(' ',len_stmt, strip(name), '$', strip(maxlength)) ;
         if eof then call symput('lenstr',trim(len_stmt));
     run;
+    %cleanup(char_vars,lib=work);
     %LET i=1;
     %DO %while  (%scan(&ds_names,&i) ne );
         %LET ds=%scan(&ds_names,&i);
         %IF %sysfunc(exist(&in..&ds)) %THEN %DO;
-            data _tempdata_;
-                &lenstr.;
-                set &in..&ds(
-                    %IF %UPCASE(&test)=TRUE %THEN obs=10000;)
-                ;
-            run;
-            %IF %varexist(&in..&ds,&pnrvar) %THEN %DO;
-                proc sort data=_tempdata_ out=_tempdata_(
-                    %IF &pnrvar ne pnr %THEN rename=(&pnrvar=pnr);
-                    %IF &keep ne %THEN keep=&pnrvar &keep;) noduplicates;
-                    by &pnrvar;
-                run;
-                %END;
 
-                        /* omdøb alle variable som har et foranstillet type indikator fx C_, D_  */
-                        /* fjern variabeltype indikatorer som DS bruger på især LPR2 variable */
             proc sql noprint;
                 select nvar into :num_vars
                     from dictionary.tables
-                    where libname="WORK" and upper(memname)="_TEMPDATA_";
+                    where libname="&in" and upper(memname)="&ds";
                 select distinct(name) into :var1-:var%trim(%left(&num_vars))
                     from dictionary.columns
-                    where libname="WORK" and upper(memname)="_TEMPDATA_";
+                    where libname="&in" and upper(memname)="&ds";
                 %sqlquit;
-            %LET used=;
-            proc datasets library=work nolist;
-                modify _tempdata_;
-                %DO v=1 %to &num_vars;
-                    %LET l=%length(&&var&v);
-                    %IF "%substr(&&var&v,1,2)"="C_" OR
-                        "%substr(&&var&v,1,2)"="D_" OR
-                        "%substr(&&var&v,1,2)"="V_"
-                        %THEN %DO;
-                            %IF %SYSFUNC(INDEXW(&used,%substr(&&var&v,3,%eval(&l-2))))=0 %THEN %DO;
-                                rename &&var&v = %substr(&&var&v,3,%eval(&l-2));
-                                %LET used = &used %substr(&&var&v,3,%eval(&l-2));
-                            %END;
-                        %END;
+        %IF %varexist(&in..&ds,&pnrvar) %THEN %DO;
+            proc sql;
+            select count(*) into :ndel from &in..&ds where missing(strip(&pnrvar));
+                %IF &ndel>0 %THEN %DO;
+                    %PUT WARNING: Number of rows in &in..&ds with missing &pnrvar: &ndel..;
+                %END;
+            quit;
+        %END;
+        proc sql;
+            %IF %sysfunc(exist(&out..&ds)) %THEN drop table &out..&ds;;
+            %IF %sysfunc(exist(&out..&ds,VIEW)) %THEN drop view &out..&ds;;    
+        quit;
+
+        %let defpath = %sysfunc(pathname(&out))/&ds._def.sas;
+        data _null_;
+        file "&defpath";
+        put "  data &out..&d";
+        %IF %UPCASE(&mode)=VIEW %THEN put "/ view=&out..&ds";;
+        put ";";
+        put "&lenstr.;";
+        put "set &in..&ds(";
+                    %IF %UPCASE(&test)=TRUE %THEN put " obs=10000";;
+                    %IF &pnrvar ne pnr %THEN put "rename=(&pnrvar=pnr)";;
+                    %IF &keep ne %THEN put "keep=&pnrvar &keep";;
+        put ")";
+        put ";";
+        %IF %varexist(&in..&ds,&pnrvar) %THEN %DO;
+            put "if missing(strip(pnr)) then delete;";
+        %END;
+                    /* omdøb alle variable som har et foranstillet type indikator fx C_, D_  */
+                    /* fjern variabeltype indikatorer som DS bruger på især LPR2 variable */
+        %LET used=;
+        %DO v=1 %to &num_vars;
+            %LET l=%length(&&var&v);
+            %IF "%substr(&&var&v,1,2)"="C_" OR
+                "%substr(&&var&v,1,2)"="D_" OR
+                "%substr(&&var&v,1,2)"="V_"
+                %THEN %DO;
+                    %IF %SYSFUNC(INDEXW(&used,%substr(&&var&v,3,%eval(&l-2))))=0 %THEN %DO;
+                        put "rename &&var&v = %substr(&&var&v,3,%eval(&l-2));";
+                        %LET used = &used %substr(&&var&v,3,%eval(&l-2));
                     %END;
-                ;
-            quit; run;
-                        /* Erstat pnr med heltalsløbenummer fra keyPNR */
-            %LET Nudenid = 0;
-            Data &out..&ds;
-                %IF %varexist(_tempdata_,pnr) %THEN %DO; /* erstat personident hvis relevant */
-                if _N_ =1 then _Nudenid_=0;
-                    retain _Nudenid_;
-                    merge _tempdata_(in=b) master.keyPNR(in=a);
-                    by pnr;
-                    drop pnr;
-                    rename nypnr=pnr;
-                    if b;
-                    if b and not a and first.pnr then _Nudenid_+1;
-                    call symput('Nudenid',_Nudenid_);
-                    drop _Nudenid_;
-                    %END;
-                %else
-                    set _tempdata_;;
-            run;
-            %IF &Nudenid>0 %THEN %put WARNING: &Nudenid rækker uden ident i master.keyPNR!;
+                %END;
             %END;
-            %else %put ERROR: The file &in..&ds does not exist;
+            put "run;";
+            run;
+            %include "&defpath";
+            %END;
             %LET i=%eval(&i+1);
         %END;
+        
+%END_timer(masterdata, text=Measure time for master);
+%END_log;
     %mend;
 
 options compress=YES;
@@ -167,8 +160,7 @@ options compress=YES;
 %mycopy(nyfoedte,in=extdata2,pnrvar=cprnummer_mor);
 *%mycopy(tumor_aarlig,in=rawext,pnrvar=cprnummer);
 
-%END_timer(masterdata, text=Measure time for master);
-%END_log;
+
 
 
 
