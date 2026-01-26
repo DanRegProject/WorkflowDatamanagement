@@ -111,54 +111,56 @@
 %END_log;
     %mend;
 
+%let mode=view;
 options compress=YES;
-%mycopy(population_,in=popdata);
-*%mycopy(akm);
-%mycopy(bef);
-%mycopy(dod2023);
-%mycopy(dodsaasg);
-%mycopy(faik);
-%mycopy(lmdb,keep=eksd vnr apk indo doso atc volume strnum packsize patt korr rimb);
-%mycopy(lpr_adm);
-*%mycopy(lpr_bes);
-%mycopy(lpr_diag);
-%mycopy(lpr_opr);
-%mycopy(lpr_sksopr);
-%mycopy(lpr_sksube);
-%mycopy(priv_adm);
-%mycopy(priv_diag);
-%mycopy(priv_sksopr);
-%mycopy(priv_sksube);
-%mycopy(psyk_adm); /*psyk_adm fejlleveret som årstabeller 2002-2018*/
-%mycopy(psyk_diag);
-%mycopy(lpr_f_diagnoser);
-%mycopy(lpr_f_kontakter);
-*%mycopy(lpr_f_forloeb);
-*%mycopy(lpr_f_helbredsforloeb);
-*%mycopy(lpr_f_forloebsmarkoerer);
-%mycopy(lpr_f_resultater);
-%mycopy(lpr_f_procedurer_andre);
-%mycopy(lpr_f_procedurer_kirurgi);
-%mycopy(lpr_f_organisationer);
-%mycopy(uddf;
-%mycopy(vnds);
-*%mycopy(sssy);
-*%mycopy(sysi);
+%mycopy(population_,in=popdata,mode=&mode);
+*%mycopy(akm,mode=&mode);
+%mycopy(bef,mode=&mode);
+%mycopy(dod2023,mode=&mode);
+%mycopy(dodsaasg,mode=&mode);
+%mycopy(faik,mode=&mode);
+%mycopy(lmdb,keep=eksd vnr apk indo doso atc volume strnum packsize patt korr rimb,mode=&mode);
+%mycopy(lpr_adm,mode=&mode);
+*%mycopy(lpr_bes,mode=&mode);
+%mycopy(lpr_diag,mode=&mode);
+%mycopy(lpr_opr,mode=&mode);
+%mycopy(lpr_sksopr,mode=&mode);
+%mycopy(lpr_sksube,mode=&mode);
+%mycopy(priv_adm,mode=&mode);
+%mycopy(priv_diag,mode=&mode);
+%mycopy(priv_sksopr,mode=&mode);
+%mycopy(priv_sksube,mode=&mode);
+%mycopy(psyk_adm,mode=&mode); 
+%mycopy(psyk_diag,mode=&mode);
+%mycopy(lpr_f_diagnoser,mode=&mode);
+%mycopy(lpr_f_kontakter,mode=&mode);
+*%mycopy(lpr_f_forloeb,mode=&mode);
+*%mycopy(lpr_f_helbredsforloeb,mode=&mode);
+*%mycopy(lpr_f_forloebsmarkoerer,mode=&mode);
+%mycopy(lpr_f_resultater,mode=&mode);
+%mycopy(lpr_f_procedurer_andre,mode=&mode);
+%mycopy(lpr_f_procedurer_kirurgi,mode=&mode);
+%mycopy(lpr_f_organisationer,mode=&mode);
+%mycopy(uddf,mode=&mode);
+%mycopy(vnds,mode=&mode);
+*%mycopy(sssy,mode=&mode);
+*%mycopy(sysi,mode=&mode);
 
-*%mycopy(dimcancergruppering_icd10,in=rawext);
-*%mycopy(dimpatologiskdiagnose,in=rawext);
-*%mycopy(fctpatologiskprocedure,in=rawext);
-*%mycopy(fctrekvisition,in=rawext,pnrvar=cprnummer);
+*%mycopy(dimcancergruppering_icd10,in=rawext,mode=&mode);
+*%mycopy(dimpatologiskdiagnose,in=rawext,mode=&mode);
+*%mycopy(fctpatologiskprocedure,in=rawext,mode=&mode);
+*%mycopy(fctrekvisition,in=rawext,pnrvar=cprnummer,mode=&mode);
 
-*%mycopy(,in=rawext,pnrvar=cprnummer);
+*%mycopy(,in=rawext,pnrvar=cprnummer,mode=&mode);
 
-%mycopy(indberetningmedpris,in=extdata2,pnrvar=v_cpr,keep=d_adm d_kontakt_start d_ord_slut d_ord_start c_varenummer c_indikation_kode v_adm_dosis c_atc v_styrke_num v_styrke_enhed);
-%mycopy(lab_dm_forsker,in=extdata2,pnrvar=patient_cpr);
-%mycopy(lab_dm_labidcodes,in=extdata2);
-%mycopy(lab_dm_optaelling,in=extdata2);
-%mycopy(mfr,in=extdata2,pnrvar=cpr_moder);
-%mycopy(nyfoedte,in=extdata2,pnrvar=cprnummer_mor);
-*%mycopy(tumor_aarlig,in=rawext,pnrvar=cprnummer);
+%mycopy(indberetningmedpris,in=extdata2,pnrvar=v_cpr,keep=d_adm d_kontakt_start d_ord_slut d_ord_start c_varenummer c_indikation_kode v_adm_dosis c_atc v_styrke_num v_styrke_enhed,mode=&mode);
+%mycopy(lab_dm_forsker,in=extdata2,pnrvar=patient_cpr,mode=&mode);
+%mycopy(lab_dm_labidcodes,in=extdata2,mode=&mode);
+%mycopy(lab_dm_optaelling,in=extdata2,mode=&mode);
+%mycopy(mfr,in=extdata2,pnrvar=cpr_moder,mode=&mode);
+%mycopy(nyfoedte,in=extdata2,pnrvar=cprnummer_mor,mode=&mode);
+*%mycopy(tumor_aarlig,in=rawext,pnrvar=cprnummer,mode=&mode);
+
 
 
 
