@@ -1,8 +1,8 @@
 /* Start del 2.2 */
-%start_log(&logdir, 2_2-EnsretLPR2Data);
-%start_timer(masterdata); /* measure time for this macro */
 
 %macro ensretlpr2(head, in=master,out=master);
+%start_log(&logdir, 2_2-EnsretLPR2Data&head);
+%start_timer(masterdata); /* measure time for this macro */
     * head: prefix på datasæt ;
     * in:   libname hvor der læses fra ;
     * out:  libname hvor data skal placeres ;
@@ -13,15 +13,16 @@
     proc sql noprint;
         select distinct memname into :ds_names separated by ' '
             from dictionary.tables
-            where libname=upcase("&in") and prxmatch("/^&head.([^A-Za-z]|$)/", memname) > 0 and upcase(memtype)="DATA";
+            where libname=upcase("&in") and prxmatch("/^&head.([^A-Za-z]|$)/", memname) > 0 and 
+            (upcase(memtype)="DATA" or upcase(memtype)="VIEW");
 
         %if %index(&head,ADM)>0  %then %do;
         /* ADM */;
         %let i=1;
         %do %while  (%scan(&ds_names,&i) ne );
             %let dsn=%scan(&ds_names,&i);
-            %if %sysfunc(exist(&in..&dsn)) %then %do;
-                data &out..&dsn;
+            %if %sysfunc(exist(&in..&dsn)) or %sysfunc(exist(&in..&dsn,VIEW)) %then %do;
+                data _tempdata_;
                     set &in..&dsn;
                     _void_=0;
                     starttid=hms(%if %varexist(&in..&dsn,INDTIME) %then indtime;%else 11;,
@@ -35,10 +36,13 @@
                     %if %varexist(&in..&dsn,udtime) %then  udtime;
                     %if %varexist(&in..&dsn,udminut) %then  udminut;;
                 run;
-
-                proc sort data=&out..&dsn noduplicates;
+               proc sql noprint;
+               %IF SYSFUNC(exist(&out..&dsn,VIEW)) %THEN drop view &out..&dsn;;
+               quit;
+                proc sort data=_tempdata_ out=&out..&dsn noduplicates;
                     by pnr kontakt_id;
                 run;
+                %cleanup(_tempdata_,lib=work);
                 %end;
             %let i=%eval(&i+1);
             %end;
@@ -48,7 +52,7 @@
     %let i=1;
     %do %while  (%scan(&ds_names,&i) ne );
         %let dsn=%scan(&ds_names,&i);
-        %if %sysfunc(exist(&in..&dsn)) %then %do; /* test om filen findes */
+        %if %sysfunc(exist(&in..&dsn))  or %sysfunc(exist(&in..&dsn,VIEW)) %then %do; /* test om filen findes */
                 data _tempdata1_ _tempdata_;
             set &in..&dsn;
             _void_=0;
@@ -63,14 +67,17 @@
             output _tempdata1_ ;
                 run;
                 proc sql;
+                 %IF %sysfunc(exist(&in..&dsn,VIEW)) %THEN drop view &out..&dsn;;
                     create table &out..&dsn as
                         select a.*, b.diagtype as diagtype_parent
                         from _tempdata1_ a left join _tempdata_ b
                         on a.kontakt_id=b.kontakt_id and a.diagkode_parent=b.diag;
-
+                quit;
                 proc sort data=&out..&dsn noduplicates;
                     by kontakt_id;
                 run;
+                %cleanup(_tempdata_,lib=work);
+                %cleanup(_tempdata1_,lib=work);
                 %end;
             %let i=%eval(&i+1);
             %end;
@@ -80,8 +87,8 @@
         %let i=1;
         %do %while  (%scan(&ds_names,&i) ne );
             %let dsn=%scan(&ds_names,&i);
-            %if %sysfunc(exist(&in..&dsn)) %then %do; /* test om filen findes */
-                data &out..&dsn;
+            %if %sysfunc(exist(&in..&dsn)) or  %sysfunc(exist(&in..&dsn,VIEW)) %then %do; /* test om filen findes */
+                data _tempdata_;
                 set &in..&dsn;
                 %if %varexist(&in..&dsn,oprart) %then %DO;
                     proctype=oprart;
@@ -101,13 +108,19 @@
                 osgh oafd %if %varexist(&in..&dsn,OTIME) %then otime;
                 %if %varexist(&in..&dsn,OMINUT) %then ominut;;
                 run;
-                proc sort data=&out..&dsn noduplicates;
+                proc sql;
+                %IF  %sysfunc(exist(&in..&dsn,VIEW)) %THEN drop view &out..&dsn;;
+                quit;
+                proc sort data=_tempdta_ out=&out..&dsn noduplicates;
                     by kontakt_id;
                 run;
+                %cleanup(_tempdata_);
                 %end;
             %let i=%eval(&i+1);
             %end;
         %end;
+%end_timer(masterdata, text=Measure time for master);
+%end_log;
     %mend;
 %ensretlpr2(lpr_adm   );
 *%ensretlpr2(lpr_bes   );
@@ -122,6 +135,5 @@
 %ensretlpr2(psyk_adm   );
 %ensretlpr2(psyk_diag  );
 
-%end_timer(masterdata, text=Measure time for master);
-%end_log;
+
 
