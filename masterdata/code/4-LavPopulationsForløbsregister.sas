@@ -1,7 +1,7 @@
 /* Start del 4 */
 
-/* tjek årstal på dod og vnds nederst */
-%start_log(&logdir, 4-LavPopulationsForløbsregister);
+/* tjek Ã¥rstal pÃ¥ dod og vnds nederst */
+%start_log(&logdir, 4-LavPopulationsForlÃ¸bsregister);
 %start_timer(masterdata); /* measure time for this macro */
 
 
@@ -22,16 +22,24 @@ data pop;
 	by pnr;
 %runquit;
 %macro ibef;
-	%do y=1985 %to %sysfunc(date(),year4);
-   		%if %sysfunc(exist(&in..bef&y)) %then %do;
+    proc sql noprint;
+    select distinct memname into :ds_names separated by ' '
+        from dictionary.tables
+        where libname=upcase("&in") and prxmatch("/^&head.([^A-Za-z]|$)/", memname) > 0 and 
+        (upcase(memtype)="DATA" or upcase(memtype)="VIEW");
+	%let i=1;
+	
+	%do %while (%scan(&ds_names,&i) ne );
+   		%if %sysfunc(exist(&in..&dsn)) or %sysfunc(exist(&in..&dsn,VIEW)) %then %do;
 			proc sql;
 			create table _pop as
 				select a.*, b.koen as koen&y, b.foed_dag as foed_dag&y, &y as yr&y
-			from pop a left join &in..bef&y b
+			from pop a left join &in..&dsn b
 			on a.pnr=b.pnr
 			order by pnr;
 			create table pop as select * from _pop;
 		%end;
+		%let i=%eval(&i+1);
 	%end;
 	run;
 %mend;
@@ -99,7 +107,7 @@ end;
 		indv_dato=haend_dato-1;
 		fra_land=indUd_land;
 	end;
-	if indud_kode='U' and (last_kode ne indud_kode) /* brug første række hvis gentagelser */ then do;
+	if indud_kode='U' and (last_kode ne indud_kode) /* brug fÃ¸rste rÃ¦kke hvis gentagelser */ then do;
 		udv_dato=haend_dato;
 		til_land=indUd_land;
 	end;
@@ -107,7 +115,7 @@ end;
 	rec_in=&globalstart;
 	rec_out=&globalend;
 
-	if last.pnr or (indud_kode='U'  and (last_kode ne indud_kode) /* brug første række hvis gentagelser */)  then do;
+	if last.pnr or (indud_kode='U'  and (last_kode ne indud_kode) /* brug fÃ¸rste rÃ¦kke hvis gentagelser */)  then do;
 		if last.pnr and indud_kode='I' then do;
 			udv_dato=&globalend;
 			til_land=.;
@@ -134,3 +142,4 @@ run;
 
 %end_timer(masterdata, text=Measure time for master);
 %end_log;
+
