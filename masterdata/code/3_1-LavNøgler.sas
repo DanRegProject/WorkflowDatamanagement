@@ -18,11 +18,12 @@
     proc sql noprint;
         select distinct memname into :ds_names separated by ' '
             from dictionary.tables
-            where libname=upcase("&in") and prxmatch("/^&head.([^A-Za-z]|$)/", memname) > 0 and upcase(memtype)="DATA";
+            where libname=upcase("&in") and prxmatch("/^&head.([^A-Za-z]|$)/", memname) > 0 and 
+			(upcase(memtype)="DATA" or upcase(memtype)="VIEW");
         %let i=1;
         %do %while  (%scan(&ds_names,&i) ne );
             %let dsn=%scan(&ds_names,&i);
-            %if %sysfunc(exist(&in..&dsn)) %then %do;
+            %if %sysfunc(exist(&in..&dsn)) or %sysfunc(exist(&in..&dsn,VIEW)) %then %do;
                 %if %varexist(&in..&dsn,&ident) %then %do; /* evt sortere efter personident */
                 proc sql;
                     %if &i=1 %then create table _tempfile_ as;
@@ -62,4 +63,5 @@
 %makekey(lpr_f_kontakter,KONTAKT_id);
 %end_timer(masterdata, text=Measure time for master);
 %end_log;
+
 
